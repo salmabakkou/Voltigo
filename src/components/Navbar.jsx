@@ -11,6 +11,8 @@ export default function Navbar() {
     // Safeguard: make sure we handle null pathnames just in case (hydration sync)
     const currentPath = pathname || "/";
 
+    if (currentPath.startsWith("/admin")) return null;
+
     const navLinks = [
         { name: "CARS", path: "/cars" },
         { name: "ABOUT", path: "/about" },
@@ -35,8 +37,8 @@ export default function Navbar() {
                                 key={link.name}
                                 href={link.path}
                                 className={`text-[10px] uppercase font-bold tracking-[0.2em] transition-colors pb-1 border-b-[3px] relative ${isActive
-                                        ? "border-[#CFFF1A] text-white"
-                                        : "border-transparent text-gray-400 hover:text-white"
+                                    ? "border-[#CFFF1A] text-white"
+                                    : "border-transparent text-gray-400 hover:text-white"
                                     }`}
                             >
                                 {link.name}
