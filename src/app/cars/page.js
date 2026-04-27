@@ -1,23 +1,44 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import CarCard from "../../components/CarCard";
+import { getCars } from "../../services/api";
 
 export default function CarsPage() {
-    // Mock data for the fleet
-    const cars = [
-        { id: 1, name: "Voltigo Aero GT", type: "Electric Sports", range: "650 km", acceleration: "2.1s", price: "$200", image: "/hero.png" },
-        { id: 2, name: "Eco SUV Prime", type: "Hybrid Family", range: "800 km", acceleration: "4.5s", price: "$120", image: "/hero.png" },
-        { id: 3, name: "City Whisper", type: "Compact Electric", range: "350 km", acceleration: "6.0s", price: "$75", image: "/hero.png" },
-        { id: 4, name: "Ecosport Performante", type: "Hypercar", range: "500 km", acceleration: "1.9s", price: "$450", image: "/hero.png" },
-        { id: 5, name: "Luxe Sedan E", type: "Executive", range: "600 km", acceleration: "3.2s", price: "$180", image: "/hero.png" },
-        { id: 6, name: "Off-Road Explorer", type: "Electric 4x4", range: "550 km", acceleration: "4.8s", price: "$150", image: "/hero.png" },
-    ];
+    const [cars, setCars] = useState([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchFleet = async () => {
+            try {
+                setLoading(true);
+                const data = await getCars();
+
+                // Format the API data precisely structure expected by CarCard
+                const formattedCars = data.map(car => ({
+                    ...car,
+                    price: `$${car.price_per_day}`, // Map the backend schema onto the frontend schema
+                    acceleration: "3.2s" // Fallback data since the Admin Deploy Form doesn't ask for it
+                }));
+
+                setCars(formattedCars);
+            } catch (err) {
+                console.error("Failed to fetch vehicles from Data_Lake.", err);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchFleet();
+    }, []);
 
     return (
-        <main className="min-h-screen bg-[#0A100E] text-white pt-32 md:pt-40 px-6 md:px-12 lg:px-24 pb-20 font-sans overflow-x-hidden">
+        <main className="min-h-[100dvh] bg-[#0A100E] text-white pt-32 md:pt-40 px-6 md:px-12 lg:px-24 pb-20 font-sans overflow-x-hidden">
 
             {/* Header Section */}
             <div className="flex flex-col items-center text-center mb-16 md:mb-20 relative">
                 {/* Subtle Ambient Glow */}
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[200px] md:w-[300px] h-[200px] md:h-[300px] bg-[#CFFF1A]/5 rounded-full blur-[100px] pointer-events-none"></div>
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[200px] md:w-[300px] h-[200px] md:h-[300px] bg-[#CFFF1A]/5 rounded-full blur-[100px] pointer-events-none z-0"></div>
 
                 <h3 className="text-[#CFFF1A] text-[10px] md:text-xs font-bold tracking-[0.4em] uppercase mb-4 relative z-10">Our Vehicles</h3>
                 <h1 className="text-4xl md:text-6xl lg:text-7xl font-black uppercase tracking-tighter drop-shadow-2xl relative z-10 text-center flex flex-col sm:block">
@@ -28,12 +49,27 @@ export default function CarsPage() {
                 </p>
             </div>
 
-            {/* Grid of Cars - Responsive container */}
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8 md:gap-10">
-                {cars.map((car) => (
-                    <CarCard key={car.id} car={car} />
-                ))}
-            </div>
+            {/* Content Loading & Display Architecture */}
+            {loading ? (
+                <div className="flex flex-col items-center justify-center py-20">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#CFFF1A] animate-ping mb-6 shadow-[0_0_15px_rgba(207,255,26,1)]"></span>
+                    <span className="text-[#CFFF1A]/70 text-[9px] uppercase tracking-[0.4em] font-bold">
+                        Syncing Voltigo Vault...
+                    </span>
+                </div>
+            ) : cars.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-20 border border-white/5 border-dashed rounded-3xl bg-white/[0.01]">
+                    <span className="text-gray-600 text-[10px] uppercase tracking-[0.3em] font-bold">
+                        No vehicles currently configured for public deployment.
+                    </span>
+                </div>
+            ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8 md:gap-10">
+                    {cars.map((car) => (
+                        <CarCard key={car.id} car={car} />
+                    ))}
+                </div>
+            )}
 
         </main>
     );
