@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { getCars, deleteCar } from "../../../services/api";
+import axios from "axios";
+import { getCars, deleteCar, updateCar } from "../../../services/api";
 import Link from "next/link";
 
 export default function FleetConfigPage() {
@@ -11,6 +12,13 @@ export default function FleetConfigPage() {
     // Custom Modal States
     const [carToDelete, setCarToDelete] = useState(null);
     const [isDeleting, setIsDeleting] = useState(false);
+
+    // Update Modal States
+    const [carToUpdate, setCarToUpdate] = useState(null);
+    const [updateData, setUpdateData] = useState({ name: "", brand: "", type: "", price_per_day: "", range: "" });
+    const [updateImageFile, setUpdateImageFile] = useState(null);
+    const [updatePreview, setUpdatePreview] = useState(null);
+    const [isUpdating, setIsUpdating] = useState(false);
 
     const fetchCars = async () => {
         try {
@@ -35,12 +43,78 @@ export default function FleetConfigPage() {
             setIsDeleting(true);
             await deleteCar(carToDelete.id);
             setCars(cars.filter(car => car.id !== carToDelete.id));
-            setCarToDelete(null); // Clos modal on success
+            setCarToDelete(null); // Close modal on success
         } catch (err) {
             console.error(err);
             alert("Failed to delete the vehicle. Check connection.");
         } finally {
             setIsDeleting(false);
+        }
+    };
+
+    // Trigger Update Modal
+    const handleUpdateClick = (car) => {
+        setCarToUpdate(car);
+        setUpdateData({
+            name: car.name,
+            brand: car.brand,
+            type: car.type,
+            price_per_day: car.price_per_day,
+            range: car.range,
+        });
+        setUpdatePreview(car.image);
+        setUpdateImageFile(null);
+    };
+
+    const handleUpdateChange = (e) => {
+        let val = e.target.value;
+        if (e.target.name === "price_per_day" && val < 0) val = 0;
+        setUpdateData({ ...updateData, [e.target.name]: val });
+    };
+
+    const handleUpdateImageChange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            setUpdateImageFile(file);
+            setUpdatePreview(URL.createObjectURL(file));
+        }
+    };
+
+    const handleUpdateSubmit = async (e) => {
+        e.preventDefault();
+        setIsUpdating(true);
+
+        try {
+            let imageUrl = updatePreview;
+
+            // Upload new image if it was changed
+            if (updateImageFile) {
+                const uploadConf = new FormData();
+                uploadConf.append("file", updateImageFile);
+                uploadConf.append("upload_preset", process.env.NEXT_PUBLIC_UPLOAD_PRESET);
+                const uploadRes = await axios.post(
+                    process.env.NEXT_PUBLIC_CLOUDINARY_URL,
+                    uploadConf
+                );
+                imageUrl = uploadRes.data.secure_url;
+            }
+
+            const updatedPayload = {
+                ...updateData,
+                price_per_day: Number(updateData.price_per_day),
+                image: imageUrl,
+            };
+
+            await updateCar(carToUpdate.id, updatedPayload);
+
+            // Update local state without refreshing page
+            setCars(cars.map(c => c.id === carToUpdate.id ? { ...c, ...updatedPayload } : c));
+            setCarToUpdate(null); // Close the modal
+        } catch (err) {
+            console.error(err);
+            alert("Failed to update asset.");
+        } finally {
+            setIsUpdating(false);
         }
     };
 
@@ -120,7 +194,7 @@ export default function FleetConfigPage() {
 
                                     <div className="flex items-center gap-2 w-full md:w-auto justify-end">
                                         <button
-                                            onClick={() => alert(`Redirecting to update configuration panel for ${car.name}... (Future Implementation)`)}
+                                            onClick={() => handleUpdateClick(car)}
                                             className="px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-[9px] text-white uppercase font-bold tracking-widest hover:bg-white/10 hover:border-[#CFFF1A]/50 hover:text-[#CFFF1A] transition-all"
                                         >
                                             Update
@@ -140,12 +214,126 @@ export default function FleetConfigPage() {
 
             </div>
 
+            {/* --- UPDATE MODAL POPUP --- */}
+            {carToUpdate && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+                    {/* Dark blur backdrop */}
+                    <div
+                        className="absolute inset-0 bg-black/80 backdrop-blur-xl transition-opacity cursor-pointer"
+                        onClick={() => !isUpdating && setCarToUpdate(null)}
+                    ></div>
+
+                    <div className="max-w-3xl w-full relative z-10 transition-all scale-100 animate-in fade-in zoom-in duration-200" onClick={(e) => e.stopPropagation()}>
+
+                        <div className="mb-4 border-b border-white/5 pb-4 flex justify-between items-end">
+                            <div>
+                                <h1 className="text-2xl md:text-3xl font-black uppercase tracking-widest text-[#CFFF1A] mb-1 flex items-center gap-3">
+                                    <span className="w-1.5 h-6 bg-[#CFFF1A] rounded-full inline-block shadow-[0_0_15px_rgba(207,255,26,0.5)]"></span>
+                                    <span className="text-white mt-1">Configure Asset</span>
+                                </h1>
+                                <p className="text-gray-400 text-[9px] tracking-widest uppercase ml-5 mt-2">
+                                    Applying hotfixes to UID: {carToUpdate.id}
+                                </p>
+                            </div>
+                            <button onClick={() => setCarToUpdate(null)} disabled={isUpdating} className="text-gray-500 hover:text-white text-xl mb-1 disabled:opacity-50">✕</button>
+                        </div>
+
+                        <form onSubmit={handleUpdateSubmit} className="bg-white/[0.02] border border-white/5 rounded-3xl p-6 shadow-[0_30px_60px_rgba(0,0,0,0.8),inset_0_1px_1px_rgba(255,255,255,0.05)] flex flex-col gap-6 relative overflow-hidden">
+
+                            {/* Background aura inside form */}
+                            <div className="absolute top-0 right-0 w-[200px] h-[200px] bg-[#CFFF1A]/5 rounded-full blur-[80px] pointer-events-none z-0"></div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-5 relative z-10">
+
+                                <div className="flex flex-col gap-1 group">
+                                    <label className="text-[9px] text-gray-500 uppercase tracking-widest font-bold ml-2 group-focus-within:text-[#CFFF1A] transition-colors">Model Name</label>
+                                    <input
+                                        type="text" name="name" value={updateData.name} onChange={handleUpdateChange} required
+                                        className="w-full bg-black/60 border border-white/5 rounded-2xl px-5 py-3 text-[14px] text-white focus:outline-none focus:border-[#CFFF1A]/50 focus:ring-1 focus:ring-[#CFFF1A]/20 transition-all placeholder-gray-700 shadow-inner"
+                                    />
+                                </div>
+
+                                <div className="flex flex-col gap-1 group">
+                                    <label className="text-[9px] text-gray-500 uppercase tracking-widest font-bold ml-2 group-focus-within:text-[#CFFF1A] transition-colors">Brand</label>
+                                    <input
+                                        type="text" name="brand" value={updateData.brand} onChange={handleUpdateChange} required
+                                        className="w-full bg-black/60 border border-white/5 rounded-2xl px-5 py-3 text-[14px] text-white focus:outline-none focus:border-[#CFFF1A]/50 focus:ring-1 focus:ring-[#CFFF1A]/20 transition-all placeholder-gray-700 shadow-inner"
+                                    />
+                                </div>
+
+                                <div className="flex flex-col gap-1 group">
+                                    <label className="text-[9px] text-gray-500 uppercase tracking-widest font-bold ml-2 group-focus-within:text-[#CFFF1A] transition-colors">Powertrain</label>
+                                    <div className="relative">
+                                        <select
+                                            name="type" value={updateData.type} onChange={handleUpdateChange}
+                                            className="w-full bg-black/60 border border-white/5 rounded-2xl px-5 py-3 text-[14px] text-[#CFFF1A] focus:outline-none focus:border-[#CFFF1A]/50 focus:ring-1 focus:ring-[#CFFF1A]/20 transition-all appearance-none cursor-pointer shadow-inner font-bold tracking-widest uppercase"
+                                        >
+                                            <option value="Electric" className="bg-[#0b120f]">Electric</option>
+                                            <option value="Hybrid" className="bg-[#0b120f]">Hybrid</option>
+                                            <option value="Hypercar" className="bg-[#0b120f]">Hypercar</option>
+                                        </select>
+                                        <div className="absolute top-1/2 right-4 -translate-y-1/2 pointer-events-none">
+                                            <svg className="w-4 h-4 text-[#CFFF1A]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="flex flex-col gap-1 group">
+                                    <label className="text-[9px] text-gray-500 uppercase tracking-widest font-bold ml-2 group-focus-within:text-[#CFFF1A] transition-colors">Range</label>
+                                    <input
+                                        type="text" name="range" value={updateData.range} onChange={handleUpdateChange} required
+                                        className="w-full bg-black/60 border border-white/5 rounded-2xl px-5 py-3 text-[14px] text-white focus:outline-none focus:border-[#CFFF1A]/50 focus:ring-1 focus:ring-[#CFFF1A]/20 transition-all placeholder-gray-700 shadow-inner"
+                                    />
+                                </div>
+
+                                <div className="flex flex-col gap-1 group">
+                                    <label className="text-[9px] text-gray-500 uppercase tracking-widest font-bold ml-2 group-focus-within:text-[#CFFF1A] transition-colors">Price / Day ($)</label>
+                                    <input
+                                        type="number" name="price_per_day" value={updateData.price_per_day} onChange={handleUpdateChange} required min="0" step="1"
+                                        className="w-full bg-black/60 border border-white/5 rounded-2xl px-5 py-3 text-[14px] text-white focus:outline-none focus:border-[#CFFF1A]/50 focus:ring-1 focus:ring-[#CFFF1A]/20 transition-all placeholder-gray-700 shadow-inner"
+                                    />
+                                </div>
+
+                                <div className="flex flex-col gap-1 group">
+                                    <label className="text-[9px] text-gray-500 uppercase tracking-widest font-bold ml-2 group-hover:text-[#CFFF1A] transition-colors">Update Image File (Optional)</label>
+                                    <div className="relative w-full h-[46px] bg-black/60 border border-dashed border-gray-600 hover:border-[#CFFF1A]/50 rounded-2xl flex items-center justify-between px-4 transition-all cursor-pointer overflow-hidden group/upload shadow-inner">
+                                        {updatePreview ? (
+                                            <div className="flex items-center gap-3">
+                                                <img src={updatePreview} className="h-7 object-contain filter drop-shadow-[0_0_5px_rgba(207,255,26,0.3)]" alt="Preview" />
+                                                <span className="text-[#CFFF1A] text-[9px] font-bold uppercase tracking-widest">Image Retained</span>
+                                            </div>
+                                        ) : (
+                                            <span className="text-gray-500 text-[9px] font-bold uppercase tracking-[0.2em] group-hover/upload:text-[#CFFF1A] transition-colors">
+                                                Click to change...
+                                            </span>
+                                        )}
+                                        <input type="file" accept="image/*" onChange={handleUpdateImageChange} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20" />
+                                    </div>
+                                </div>
+
+                            </div>
+
+                            <div className="pt-4 border-t border-white/5 flex gap-4 w-full relative z-10">
+                                <button type="button" onClick={() => setCarToUpdate(null)} disabled={isUpdating} className="w-1/3 px-6 py-3 bg-white/5 border border-white/10 rounded-full text-[10px] uppercase font-bold tracking-widest hover:bg-white/10 transition-colors disabled:opacity-50">
+                                    Cancel
+                                </button>
+                                <button type="submit" disabled={isUpdating} className="w-2/3 bg-[#CFFF1A] text-black px-6 py-3 font-black text-[10px] tracking-[0.2em] uppercase rounded-full hover:shadow-[0_0_20px_rgba(207,255,26,0.4)] transition-all duration-300 disabled:opacity-50 flex items-center justify-center">
+                                    {isUpdating ? "UPDATING DATABANKS..." : "SYNC CONFIGURATION"}
+                                </button>
+                            </div>
+
+                        </form>
+                    </div>
+                </div>
+            )}
+
+
             {/* --- CUSTOM DELETE MODAL POPUP --- */}
             {carToDelete && (
                 <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
                     {/* Dark blur backdrop */}
                     <div
-                        className="absolute inset-0 bg-black/70 backdrop-blur-md transition-opacity"
+                        className="absolute inset-0 bg-black/80 backdrop-blur-xl transition-opacity"
                         onClick={() => !isDeleting && setCarToDelete(null)}
                     ></div>
 
