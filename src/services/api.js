@@ -35,3 +35,16 @@ export const createReservation = async (data) => {
   return res.data;
 };
 
+export const getReservations = async () => {
+  try {
+    const res = await API.get("/reservations");
+    return res.data;
+  } catch (err) {
+    console.warn("MockAPI getReservations failed, fetching from localStorage fallback...", err);
+    if (typeof window !== "undefined") {
+      return JSON.parse(localStorage.getItem("voltigo_reservations") || "[]");
+    }
+    return [];
+  }
+};
+

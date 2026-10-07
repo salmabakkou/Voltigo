@@ -393,30 +393,61 @@ export default function BookingModal({ car, pickupDate, returnDate, onClose }) {
 
                     {/* ──────────── SUCCESS ──────────── */}
                     {submitted && (
-                        <div className="flex flex-col items-center justify-center py-12 gap-5 text-center">
+                        <div className="flex flex-col items-center justify-center py-8 gap-5 text-center">
                             <div className="w-20 h-20 rounded-full bg-[#CFFF1A]/20 border-2 border-[#CFFF1A] flex items-center justify-center shadow-[0_0_30px_rgba(207,255,26,0.3)]">
                                 <CheckCircle2 className="w-10 h-10 text-[#CFFF1A]" />
                             </div>
                             <div>
-                                <h3 className="text-2xl font-bold text-white mb-2">Booking Confirmed!</h3>
-                                <p className="text-gray-300 text-sm">We have sent a confirmation email to <span className="text-[#CFFF1A] font-semibold">{email}</span></p>
+                                <h3 className="text-2xl font-bold text-white mb-1">Booking Confirmed!</h3>
+                                <p className="text-gray-300 text-sm">Confirmation details sent to <span className="text-[#CFFF1A] font-semibold">{email}</span></p>
                             </div>
-                            <div className="bg-[#0e1a13] border border-[#CFFF1A]/20 rounded-2xl p-5 text-left w-full max-w-md flex flex-col gap-2.5">
-                                <div className="flex justify-between">
-                                    <span className="text-gray-400 text-sm">Vehicle</span>
-                                    <span className="text-white text-sm font-semibold">{car.brand} {car.name}</span>
+
+                            {/* Summary Card */}
+                            <div className="bg-[#0e1a13] border border-[#CFFF1A]/20 rounded-2xl p-5 text-left w-full max-w-lg flex flex-col gap-3">
+                                <div className="flex justify-between items-center border-b border-white/10 pb-3">
+                                    <div>
+                                        <span className="text-xs text-gray-400 block font-medium">Reserved Vehicle</span>
+                                        <span className="text-base text-white font-bold">{car.brand} {car.name}</span>
+                                    </div>
+                                    <span className="text-xs text-[#CFFF1A] bg-[#CFFF1A]/10 border border-[#CFFF1A]/30 px-3 py-1 rounded-full font-bold">
+                                        Confirmed
+                                    </span>
                                 </div>
-                                <div className="flex justify-between">
-                                    <span className="text-gray-400 text-sm">Dates</span>
-                                    <span className="text-white text-sm font-semibold">{fmtDate(pd)} – {fmtDate(rd)}</span>
+
+                                <div className="grid grid-cols-2 gap-3 text-sm">
+                                    <div>
+                                        <span className="text-xs text-gray-400 block">Dates</span>
+                                        <span className="text-white font-semibold text-xs">{fmtDate(pd)} – {fmtDate(rd)} ({days} days)</span>
+                                    </div>
+                                    <div>
+                                        <span className="text-xs text-gray-400 block">Customer</span>
+                                        <span className="text-white font-semibold text-xs">{firstName} {lastName}</span>
+                                    </div>
                                 </div>
-                                <div className="flex justify-between border-t border-white/10 pt-2.5 mt-1">
-                                    <span className="text-gray-400 text-sm font-medium">Total Estimated</span>
-                                    <span className="text-[#CFFF1A] text-base font-bold">${totalPrice}</span>
+
+                                <div className="grid grid-cols-2 gap-3 text-sm pt-2 border-t border-white/5">
+                                    <div>
+                                        <span className="text-xs text-gray-400 block">Pickup Method</span>
+                                        <span className="text-white font-semibold text-xs">
+                                            {pickupMode === "agency" ? `Agency: ${pickupAgency || "Selected"}` : `Delivery: ${deliveryCity || "Address"}`}
+                                        </span>
+                                    </div>
+                                    <div>
+                                        <span className="text-xs text-gray-400 block">Payment</span>
+                                        <span className="text-white font-semibold text-xs">
+                                            {payMode === "online" ? "Paid Online" : "Pay on Pickup"}
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <div className="flex justify-between items-center border-t border-white/10 pt-3 mt-1">
+                                    <span className="text-gray-300 text-sm font-semibold">Total Price</span>
+                                    <span className="text-[#CFFF1A] text-xl font-bold">${totalPrice}</span>
                                 </div>
                             </div>
-                            <button onClick={onClose} className="mt-2 px-8 py-3 bg-[#CFFF1A] text-black font-bold text-sm rounded-xl hover:bg-[#b8e617] shadow-[0_0_20px_rgba(207,255,26,0.3)] transition-all">
-                                Close Window
+
+                            <button onClick={onClose} className="mt-1 px-8 py-3 bg-[#CFFF1A] text-black font-bold text-sm rounded-xl hover:bg-[#b8e617] shadow-[0_0_20px_rgba(207,255,26,0.3)] transition-all">
+                                Done
                             </button>
                         </div>
                     )}
