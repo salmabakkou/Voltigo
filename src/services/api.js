@@ -29,3 +29,9 @@ export const getCarById = async (id) => {
   const res = await API.get(`/cars/${id}`)
   return res.data;
 };
+
+export const createReservation = async (data) => {
+  const res = await API.post("/reservations", data);
+  return res.data;
+};
+

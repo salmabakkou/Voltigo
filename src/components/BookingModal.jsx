@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
+import { createReservation } from "../services/api";
 import { 
     Building2, 
     Home, 
@@ -262,9 +263,56 @@ export default function BookingModal({ car, pickupDate, returnDate, onClose }) {
     };
     const prev = () => setStep(s => s - 1);
 
-    const handleConfirm = () => {
+    const [submitting, setSubmitting] = useState(false);
+
+    const handleConfirm = async () => {
         if (!validateStep3()) return;
-        setSubmitted(true);
+        setSubmitting(true);
+        
+        const reservationData = {
+            id: Date.now().toString(),
+            carId: car.id,
+            carName: `${car.brand} ${car.name}`,
+            pickupDate: pd?.toISOString(),
+            returnDate: rd?.toISOString(),
+            days,
+            basePrice,
+            deliveryFee,
+            totalPrice,
+            pickupMode,
+            pickupAgency,
+            deliveryAddr,
+            deliveryCity,
+            deliverySlot,
+            deliveryNote,
+            returnMode,
+            customer: {
+                firstName,
+                lastName,
+                email,
+                phone,
+                licenseNo,
+                licenseDate,
+                country,
+                idNo,
+            },
+            payMode,
+            depositMode,
+            status: "confirmed",
+            createdAt: new Date().toISOString(),
+        };
+
+        try {
+            await createReservation(reservationData);
+        } catch (err) {
+            console.warn("MockAPI POST /reservations failed or endpoint does not exist yet. Saving locally to localStorage...", err);
+            const existing = JSON.parse(localStorage.getItem("voltigo_reservations") || "[]");
+            existing.push(reservationData);
+            localStorage.setItem("voltigo_reservations", JSON.stringify(existing));
+        } finally {
+            setSubmitting(false);
+            setSubmitted(true);
+        }
     };
 
     const handleClose = () => {
@@ -586,8 +634,8 @@ export default function BookingModal({ car, pickupDate, returnDate, onClose }) {
                                 Continue <ChevronRight className="w-4 h-4 stroke-[3]" />
                             </button>
                         ) : (
-                            <button onClick={handleConfirm} className="px-8 py-3 bg-[#CFFF1A] text-black font-bold text-sm rounded-xl hover:bg-[#b8e617] shadow-[0_0_25px_rgba(207,255,26,0.4)] transition-all flex items-center gap-2">
-                                <CheckCircle2 className="w-4 h-4 stroke-[3]" /> Confirm Booking
+                            <button onClick={handleConfirm} disabled={submitting} className="px-8 py-3 bg-[#CFFF1A] text-black font-bold text-sm rounded-xl hover:bg-[#b8e617] disabled:opacity-50 disabled:cursor-not-allowed shadow-[0_0_25px_rgba(207,255,26,0.4)] transition-all flex items-center gap-2">
+                                <CheckCircle2 className="w-4 h-4 stroke-[3]" /> {submitting ? "Saving..." : "Confirm Booking"}
                             </button>
                         )}
                     </div>
