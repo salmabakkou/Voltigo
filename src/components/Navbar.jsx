@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
+import { User } from "lucide-react";
 
 export default function Navbar() {
     const pathname = usePathname();
@@ -17,6 +18,8 @@ export default function Navbar() {
         { name: "CARS", path: "/cars" },
         { name: "ABOUT", path: "/about" },
     ];
+
+    const isLoginActive = currentPath === "/login";
 
     return (
         <nav className="absolute top-0 left-0 right-0 z-50 px-6 md:px-16 py-6 md:py-10 bg-transparent w-full">
@@ -45,17 +48,38 @@ export default function Navbar() {
                             </Link>
                         );
                     })}
+
+                    {/* Login / Profile Icon */}
+                    <Link
+                        href="/login"
+                        title="Sign In / Account"
+                        className={`w-9 h-9 rounded-full border flex items-center justify-center transition-all duration-300 group ${isLoginActive
+                            ? "border-[#CFFF1A] bg-[#CFFF1A]/20 shadow-[0_0_15px_rgba(207,255,26,0.3)]"
+                            : "border-white/10 bg-white/5 hover:border-[#CFFF1A]/50 hover:bg-[#CFFF1A]/10"
+                        }`}
+                    >
+                        <User className={`w-4 h-4 transition-colors ${isLoginActive ? "text-[#CFFF1A]" : "text-gray-300 group-hover:text-[#CFFF1A]"}`} />
+                    </Link>
                 </div>
 
                 {/* Modern Mobile Menu Toggle (Hamburger to X) */}
-                <button
-                    onClick={() => setIsOpen(!isOpen)}
-                    className="md:hidden flex flex-col items-end gap-1.5 p-2 focus:outline-none"
-                >
-                    <span className={`h-[2px] bg-white transition-all duration-300 ease-in-out ${isOpen ? 'w-6 rotate-45 translate-y-[8px]' : 'w-8'}`}></span>
-                    <span className={`h-[2px] bg-white transition-all duration-300 ease-in-out ${isOpen ? 'opacity-0 w-6' : 'w-6'}`}></span>
-                    <span className={`h-[2px] bg-white transition-all duration-300 ease-in-out ${isOpen ? 'w-6 -rotate-45 -translate-y-[8px]' : 'w-4'}`}></span>
-                </button>
+                <div className="flex items-center gap-4 md:hidden">
+                    <Link
+                        href="/login"
+                        className="w-8 h-8 rounded-full border border-white/10 bg-white/5 flex items-center justify-center"
+                    >
+                        <User className="w-4 h-4 text-[#CFFF1A]" />
+                    </Link>
+
+                    <button
+                        onClick={() => setIsOpen(!isOpen)}
+                        className="flex flex-col items-end gap-1.5 p-2 focus:outline-none"
+                    >
+                        <span className={`h-[2px] bg-white transition-all duration-300 ease-in-out ${isOpen ? 'w-6 rotate-45 translate-y-[8px]' : 'w-8'}`}></span>
+                        <span className={`h-[2px] bg-white transition-all duration-300 ease-in-out ${isOpen ? 'opacity-0 w-6' : 'w-6'}`}></span>
+                        <span className={`h-[2px] bg-white transition-all duration-300 ease-in-out ${isOpen ? 'w-6 -rotate-45 -translate-y-[8px]' : 'w-4'}`}></span>
+                    </button>
+                </div>
             </div>
 
             {/* Mobile Navigation Drawer */}
@@ -72,8 +96,16 @@ export default function Navbar() {
                         >
                             {link.name}
                         </Link>
-                    )
+                    );
                 })}
+
+                <Link
+                    href="/login"
+                    onClick={() => setIsOpen(false)}
+                    className="flex items-center gap-2 text-lg uppercase font-bold text-[#CFFF1A] tracking-widest border border-[#CFFF1A]/30 bg-[#CFFF1A]/10 px-6 py-2.5 rounded-full"
+                >
+                    <User className="w-5 h-5 text-[#CFFF1A]" /> Sign In
+                </Link>
             </div>
         </nav>
     );
