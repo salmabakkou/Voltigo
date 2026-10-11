@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Zap, Gauge, ArrowUpRight } from "lucide-react";
 
 export default function CarCard({ car }) {
     // Secured fallback properties mapping
@@ -9,72 +10,106 @@ export default function CarCard({ car }) {
         range = "500 km",
         acceleration = "3.0s",
         price = "$100",
+        price_per_day,
         image = "/hero.png"
     } = car || {};
 
+    const displayPrice = price_per_day ? `$${price_per_day}` : (price.startsWith("$") ? price : `$${price}`);
+
     return (
-        <div className="group relative w-full h-[420px] bg-[#0c120f] border border-white/5 rounded-2xl overflow-hidden cursor-pointer transition-colors duration-700 hover:bg-[#111915]">
+        <Link
+            href={`/cars/${id}`}
+            className="group relative w-full h-[460px] bg-[#070D0A] border border-[#182B20] hover:border-[#CFFF1A]/50 rounded-3xl overflow-hidden cursor-pointer transition-all duration-700 shadow-[0_10px_35px_rgba(0,0,0,0.8)] hover:shadow-[0_20px_50px_rgba(0,0,0,0.9),0_0_40px_rgba(207,255,26,0.18)] flex flex-col justify-between block select-none"
+        >
 
-            {/* Subtle background radial glow appearing on hover */}
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-[#CFFF1A]/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-1000 pointer-events-none z-0"></div>
+            {/* ═══ FUTURISTIC BACKGROUND SCENERY ═══ */}
+            
+            {/* 1. Cyber Grid overlay */}
+            <div 
+                className="absolute inset-0 opacity-[0.12] group-hover:opacity-[0.22] transition-opacity duration-700 pointer-events-none z-0"
+                style={{
+                    backgroundImage: `
+                        linear-gradient(to right, rgba(207, 255, 26, 0.15) 1px, transparent 1px),
+                        linear-gradient(to bottom, rgba(207, 255, 26, 0.15) 1px, transparent 1px)
+                    `,
+                    backgroundSize: "28px 28px"
+                }}
+            />
 
-            {/* ----- HEADER INFO (Always Visible) ----- */}
-            {/* Shifts slightly upward on hover to give a dynamic feel */}
-            <div className="absolute top-8 left-8 right-8 z-20 flex justify-between items-start transition-transform duration-700 ease-[cubic-bezier(0.25,1,0.5,1)] group-hover:-translate-y-2">
+            {/* 2. Concentric Holographic Speed Podiums */}
+            <div className="absolute top-[48%] left-1/2 -translate-x-1/2 -translate-y-1/2 w-[320px] h-[320px] rounded-full bg-gradient-to-b from-[#CFFF1A]/10 via-[#7CFF3C]/5 to-transparent blur-[60px] group-hover:scale-125 group-hover:from-[#CFFF1A]/20 transition-all duration-700 pointer-events-none z-0" />
+            
+            {/* 3. High-tech Light Horizon / Ground Beam */}
+            <div className="absolute top-[62%] left-[-20%] right-[-20%] h-[1px] bg-gradient-to-r from-transparent via-[#CFFF1A]/40 to-transparent shadow-[0_0_20px_#CFFF1A] pointer-events-none z-0 group-hover:via-[#CFFF1A]/80 transition-all duration-700" />
+            
+            {/* 4. Elliptical Neon Platform under the vehicle */}
+            <div className="absolute top-[58%] left-1/2 -translate-x-1/2 w-[260px] h-[55px] rounded-[100%] border border-[#CFFF1A]/25 bg-gradient-to-b from-[#CFFF1A]/10 to-transparent blur-[1px] shadow-[0_0_25px_rgba(207,255,26,0.2)] group-hover:border-[#CFFF1A]/60 group-hover:shadow-[0_0_35px_rgba(207,255,26,0.35)] transition-all duration-700 pointer-events-none z-0" />
+
+            {/* 5. Cyber Corner Tech Accents */}
+            <div className="absolute top-4 left-4 w-3 h-3 border-t-2 border-l-2 border-[#CFFF1A]/30 group-hover:border-[#CFFF1A] transition-colors duration-500 pointer-events-none z-10" />
+            <div className="absolute top-4 right-4 w-3 h-3 border-t-2 border-r-2 border-[#CFFF1A]/30 group-hover:border-[#CFFF1A] transition-colors duration-500 pointer-events-none z-10" />
+
+            {/* ═══ TOP HEADER INFO ═══ */}
+            <div className="relative z-20 p-6 flex justify-between items-start pointer-events-none">
                 <div>
-                    <h4 className="text-[10px] text-[#CFFF1A] uppercase tracking-[0.3em] font-bold mb-2 drop-shadow-md">
-                        {type}
-                    </h4>
-                    <h2 className="text-2xl md:text-3xl font-black tracking-widest uppercase text-white/50 group-hover:text-white transition-colors duration-500 drop-shadow-lg">
+                    <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#CFFF1A]/10 border border-[#CFFF1A]/30 mb-2.5">
+                        <span className="w-1.5 h-1.5 rounded-full bg-[#CFFF1A] animate-pulse" />
+                        <span className="text-[10px] text-[#CFFF1A] uppercase tracking-[0.25em] font-bold">
+                            {type}
+                        </span>
+                    </div>
+                    <h2 className="text-xl md:text-2xl font-black tracking-wider uppercase text-white group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-white group-hover:to-[#CFFF1A] transition-all duration-500">
                         {name}
                     </h2>
                 </div>
+
+                <div className="text-right">
+                    <span className="text-[10px] text-gray-500 uppercase tracking-widest block font-medium">Daily</span>
+                    <span className="text-xl font-black text-[#CFFF1A] drop-shadow-[0_0_10px_rgba(207,255,26,0.3)]">
+                        {displayPrice}
+                    </span>
+                </div>
             </div>
 
-            {/* ----- CAR IMAGE ----- */}
-            {/* Rests neutrally, then leaps upward & scales gracefully on hover */}
-            <div className="absolute inset-0 pt-28 pb-12 px-6 flex items-center justify-center transition-all duration-[800ms] ease-[cubic-bezier(0.25,1,0.5,1)] group-hover:-translate-y-16 group-hover:scale-[1.15] z-10 pointer-events-none">
+            {/* ═══ CAR IMAGE CENTERSTAGE ═══ */}
+            <div className="relative z-10 flex-1 px-4 flex items-center justify-center transition-all duration-700 ease-[cubic-bezier(0.25,1,0.5,1)] group-hover:scale-[1.12] group-hover:-translate-y-2 pointer-events-none">
                 <img
                     src={image}
                     alt={name}
-                    /* Image always displays native base colors as requested by user */
-                    className="w-full h-full object-contain filter group-hover:brightness-110 transition-all duration-[800ms] drop-shadow-[0_20px_40px_rgba(0,0,0,0.9)]"
+                    className="max-h-[190px] w-auto object-contain filter drop-shadow-[0_15px_30px_rgba(0,0,0,0.9)] group-hover:drop-shadow-[0_20px_40px_rgba(207,255,26,0.25)] transition-all duration-700"
                 />
             </div>
 
-            {/* ----- DETAILS PANEL (Hidden by default, Revealed on Hover) ----- */}
-            {/* Slides up from the bottom boundary while fading in */}
-            <div className="absolute bottom-0 left-0 right-0 z-30 p-8 translate-y-12 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-700 ease-[cubic-bezier(0.25,1,0.5,1)] bg-gradient-to-t from-[#050807] via-[#050807]/90 to-transparent pt-24">
-
-                {/* Quick Stats Grid */}
-                <div className="grid grid-cols-2 gap-4 mb-6 border-t border-white/10 pt-6">
-                    <div className="flex flex-col">
-                        <span className="text-[9px] text-gray-500 uppercase tracking-[0.2em] mb-1">Range</span>
-                        <span className="text-sm font-bold text-white tracking-widest drop-shadow-md">{range}</span>
+            {/* ═══ BOTTOM FUTURISTIC DOCK ═══ */}
+            <div className="relative z-20 p-5 bg-gradient-to-t from-[#050907] via-[#050907]/90 to-transparent border-t border-white/5 pointer-events-none">
+                
+                {/* Stats row */}
+                <div className="grid grid-cols-2 gap-3 mb-4">
+                    <div className="flex items-center gap-2.5 bg-white/[0.03] border border-white/5 group-hover:border-[#CFFF1A]/20 px-3 py-2 rounded-xl transition-colors">
+                        <Zap className="w-4 h-4 text-[#CFFF1A]/80 shrink-0" />
+                        <div className="flex flex-col">
+                            <span className="text-[9px] text-gray-500 uppercase tracking-wider font-semibold">Range</span>
+                            <span className="text-xs font-bold text-white tracking-wide">{range}</span>
+                        </div>
                     </div>
-                    <div className="flex flex-col pl-6 border-l border-white/10">
-                        <span className="text-[9px] text-gray-500 uppercase tracking-[0.2em] mb-1">0-100 km/h</span>
-                        <span className="text-sm font-bold text-white tracking-widest drop-shadow-md">{acceleration}</span>
+
+                    <div className="flex items-center gap-2.5 bg-white/[0.03] border border-white/5 group-hover:border-[#CFFF1A]/20 px-3 py-2 rounded-xl transition-colors">
+                        <Gauge className="w-4 h-4 text-[#CFFF1A]/80 shrink-0" />
+                        <div className="flex flex-col">
+                            <span className="text-[9px] text-gray-500 uppercase tracking-wider font-semibold">0-100 km/h</span>
+                            <span className="text-xs font-bold text-white tracking-wide">{acceleration}</span>
+                        </div>
                     </div>
                 </div>
 
-                {/* Pricing & Call to Action */}
-                <div className="flex items-end justify-between mt-2">
-                    <div className="flex flex-col">
-                        <span className="text-[9px] text-gray-500 uppercase tracking-[0.2em] mb-1">Starting at</span>
-                        <span className="text-2xl font-black text-[#CFFF1A] drop-shadow-md">
-                            {price} <span className="text-[9px] text-gray-500 font-normal uppercase tracking-widest">/ day</span>
-                        </span>
-                    </div>
-                    <Link
-                        href={`/cars/${id}`}
-                        className="bg-white/5 backdrop-blur-md border border-white/20 text-white px-6 py-3.5 text-[10px] uppercase tracking-[0.2em] font-bold rounded-sm hover:bg-[#CFFF1A] hover:text-black hover:border-[#CFFF1A] hover:shadow-[0_0_20px_rgba(207,255,26,0.3)] transition-all duration-500"
-                    >
-                        Explore
-                    </Link>
+                {/* Inspect Vehicle Button Simulation */}
+                <div className="w-full py-3 bg-[#0c1611] group-hover:bg-[#CFFF1A] border border-[#CFFF1A]/30 group-hover:border-[#CFFF1A] text-white group-hover:text-black font-black text-xs uppercase tracking-[0.25em] rounded-xl transition-all duration-300 flex items-center justify-center gap-2 shadow-[0_4px_20px_rgba(0,0,0,0.6)] group-hover:shadow-[0_0_25px_rgba(207,255,26,0.4)]">
+                    <span>Inspect Vehicle</span>
+                    <ArrowUpRight className="w-4 h-4 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
                 </div>
+
             </div>
 
-        </div>
+        </Link>
     );
 }
