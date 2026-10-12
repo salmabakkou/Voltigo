@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { createReservation } from "../services/api";
+import { createReservation, updateCar } from "../services/api";
 import { 
     Building2, 
     Home, 
@@ -309,6 +309,18 @@ export default function BookingModal({ car, pickupDate, returnDate, onClose }) {
             const existing = JSON.parse(localStorage.getItem("voltigo_reservations") || "[]");
             existing.push(reservationData);
             localStorage.setItem("voltigo_reservations", JSON.stringify(existing));
+        }
+
+        // Mark the car as booked/unavailable in MockAPI and locally
+        try {
+            await updateCar(car.id, { ...car, status: "unavailable", isAvailable: false });
+        } catch (updateErr) {
+            console.warn("Could not update car status on MockAPI, updating locally...", updateErr);
+            const bookedList = JSON.parse(localStorage.getItem("voltigo_booked_cars") || "[]");
+            if (!bookedList.includes(String(car.id))) {
+                bookedList.push(String(car.id));
+                localStorage.setItem("voltigo_booked_cars", JSON.stringify(bookedList));
+            }
         } finally {
             setSubmitting(false);
             setSubmitted(true);

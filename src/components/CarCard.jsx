@@ -52,11 +52,19 @@ export default function CarCard({ car }) {
             {/* ═══ TOP HEADER INFO ═══ */}
             <div className="relative z-20 p-6 flex justify-between items-start pointer-events-none">
                 <div>
-                    <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#CFFF1A]/10 border border-[#CFFF1A]/30 mb-2.5">
-                        <span className="w-1.5 h-1.5 rounded-full bg-[#CFFF1A] animate-pulse" />
-                        <span className="text-[10px] text-[#CFFF1A] uppercase tracking-[0.25em] font-bold">
-                            {type}
-                        </span>
+                    <div className="flex items-center gap-2 mb-2.5">
+                        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#CFFF1A]/10 border border-[#CFFF1A]/30">
+                            <span className="w-1.5 h-1.5 rounded-full bg-[#CFFF1A] animate-pulse" />
+                            <span className="text-[10px] text-[#CFFF1A] uppercase tracking-[0.25em] font-bold">
+                                {type}
+                            </span>
+                        </div>
+
+                        {car?.isAvailable === false && (
+                            <span className="px-2.5 py-0.5 rounded-full bg-red-500/15 border border-red-500/40 text-red-400 text-[9px] uppercase tracking-wider font-bold">
+                                Booked
+                            </span>
+                        )}
                     </div>
                     <h2 className="text-xl md:text-2xl font-black tracking-wider uppercase text-white group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-white group-hover:to-[#CFFF1A] transition-all duration-500">
                         {name}

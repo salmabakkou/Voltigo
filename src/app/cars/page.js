@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import CarCard from "../../components/CarCard";
-import { getCars } from "../../services/api";
+import { getCars, getReservations } from "../../services/api";
 
 export default function CarsPage() {
     const [cars, setCars] = useState([]);
@@ -12,14 +12,30 @@ export default function CarsPage() {
         const fetchFleet = async () => {
             try {
                 setLoading(true);
-                const data = await getCars();
+                const [data, reservations] = await Promise.all([
+                    getCars(),
+                    getReservations().catch(() => [])
+                ]);
+
+                const locallyBooked = typeof window !== "undefined"
+                    ? JSON.parse(localStorage.getItem("voltigo_booked_cars") || "[]")
+                    : [];
 
                 // Format the API data precisely structure expected by CarCard
-                const formattedCars = data.map(car => ({
-                    ...car,
-                    price: `$${car.price_per_day}`, // Map the backend schema onto the frontend schema
-                    acceleration: "3.2s" // Fallback data since the Admin Deploy Form doesn't ask for it
-                }));
+                const formattedCars = data.map(car => {
+                    const hasReservation = reservations.some(r => String(r.carId) === String(car.id));
+                    const isLocallyBooked = locallyBooked.includes(String(car.id));
+                    const isExplicitlyUnavailable = car.status === "unavailable" || car.status === "booked" || car.isAvailable === false || car.available === false;
+
+                    const isAvailable = !hasReservation && !isLocallyBooked && !isExplicitlyUnavailable;
+
+                    return {
+                        ...car,
+                        price: `$${car.price_per_day}`,
+                        acceleration: "3.2s",
+                        isAvailable
+                    };
+                });
 
                 setCars(formattedCars);
             } catch (err) {
