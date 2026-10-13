@@ -25,11 +25,13 @@ export default function LoginPage() {
                 // Admin Authenticated
                 localStorage.setItem("voltigo_user_role", "admin");
                 localStorage.setItem("voltigo_user_email", email);
+                document.cookie = "voltigo_admin_auth=true; path=/; max-age=86400; SameSite=Lax";
                 router.push("/admin");
             } else {
                 // Regular Client
                 localStorage.setItem("voltigo_user_role", "client");
                 localStorage.setItem("voltigo_user_email", email);
+                document.cookie = "voltigo_admin_auth=; path=/; max-age=0;";
                 router.push("/cars");
             }
             setLoading(false);

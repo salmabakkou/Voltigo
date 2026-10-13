@@ -76,8 +76,10 @@ export default function SideBar() {
            <button 
              className="flex items-center justify-between w-full px-5 py-4 rounded-2xl bg-[#0c120e] border border-[#1a2620] hover:border-[#EB2411]/50 hover:bg-[#EB2411]/10 transition-all duration-300 group shadow-[inset_0_2px_4px_rgba(0,0,0,0.4)] overflow-hidden relative cursor-pointer"
              onClick={() => {
-                // Example auth kill logic that redirects to home
-                window.location.href = '/';
+                localStorage.removeItem("voltigo_user_role");
+                localStorage.removeItem("voltigo_user_email");
+                document.cookie = "voltigo_admin_auth=; path=/; max-age=0;";
+                window.location.href = '/login';
              }}
            >
               {/* Subtle Red glow on hover */}
