@@ -17,13 +17,39 @@ export default function CarsPage() {
                     getReservations().catch(() => [])
                 ]);
 
-                const locallyBooked = typeof window !== "undefined"
-                    ? JSON.parse(localStorage.getItem("voltigo_booked_cars") || "[]")
-                    : [];
+                const now = new Date();
+
+                // Only keep reservations whose return date is today or in the future
+                const activeReservations = reservations.filter(r => {
+                    if (!r.returnDate) return true; // no date = assume still active
+                    return new Date(r.returnDate) >= now;
+                });
+
+                // Active booked car IDs from API reservations
+                const activeReservedIds = activeReservations.map(r => String(r.carId));
+
+                // Clean up expired entries from localStorage
+                let locallyBooked = [];
+                if (typeof window !== "undefined") {
+                    const raw = JSON.parse(localStorage.getItem("voltigo_reservations") || "[]");
+                    const activeLocal = raw.filter(r => {
+                        if (!r.returnDate) return true;
+                        return new Date(r.returnDate) >= now;
+                    });
+                    // Persist cleaned reservations back
+                    localStorage.setItem("voltigo_reservations", JSON.stringify(activeLocal));
+
+                    const activeLocalIds = activeLocal.map(r => String(r.carId));
+                    // Rebuild voltigo_booked_cars from only active local reservations
+                    const allBooked = JSON.parse(localStorage.getItem("voltigo_booked_cars") || "[]");
+                    const cleanedBooked = allBooked.filter(id => activeLocalIds.includes(id));
+                    localStorage.setItem("voltigo_booked_cars", JSON.stringify(cleanedBooked));
+                    locallyBooked = cleanedBooked;
+                }
 
                 // Format the API data precisely structure expected by CarCard
                 const formattedCars = data.map(car => {
-                    const hasReservation = reservations.some(r => String(r.carId) === String(car.id));
+                    const hasReservation = activeReservedIds.includes(String(car.id));
                     const isLocallyBooked = locallyBooked.includes(String(car.id));
                     const isExplicitlyUnavailable = car.status === "unavailable" || car.status === "booked" || car.isAvailable === false || car.available === false;
 

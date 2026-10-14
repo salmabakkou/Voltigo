@@ -99,18 +99,40 @@ export default function CarDetailsPage({ params }) {
 
                 setCar(carData);
 
-                // Check if car has an active reservation or booked status
-                const hasReservation = allReservations?.some(r => String(r.carId) === String(id));
-                const locallyBooked = typeof window !== "undefined" 
-                    ? JSON.parse(localStorage.getItem("voltigo_booked_cars") || "[]").includes(String(id))
-                    : false;
+                const now = new Date();
+
+                // Only consider reservations that haven't expired yet
+                const activeReservations = (allReservations || []).filter(r => {
+                    if (!r.returnDate) return true; // no date = assume still active
+                    return new Date(r.returnDate) >= now;
+                });
+
+                const hasActiveReservation = activeReservations.some(r => String(r.carId) === String(id));
+
+                // Clean up localStorage: remove expired local reservations & booked car IDs
+                let isLocallyBooked = false;
+                if (typeof window !== "undefined") {
+                    const raw = JSON.parse(localStorage.getItem("voltigo_reservations") || "[]");
+                    const activeLocal = raw.filter(r => {
+                        if (!r.returnDate) return true;
+                        return new Date(r.returnDate) >= now;
+                    });
+                    localStorage.setItem("voltigo_reservations", JSON.stringify(activeLocal));
+
+                    const activeLocalIds = activeLocal.map(r => String(r.carId));
+                    const allBooked = JSON.parse(localStorage.getItem("voltigo_booked_cars") || "[]");
+                    const cleanedBooked = allBooked.filter(bid => activeLocalIds.includes(bid));
+                    localStorage.setItem("voltigo_booked_cars", JSON.stringify(cleanedBooked));
+
+                    isLocallyBooked = cleanedBooked.includes(String(id));
+                }
 
                 const isUnavailableStatus = carData?.status === "unavailable" || 
                                            carData?.status === "booked" || 
                                            carData?.isAvailable === false || 
                                            carData?.available === false;
 
-                if (hasReservation || locallyBooked || isUnavailableStatus) {
+                if (hasActiveReservation || isLocallyBooked || isUnavailableStatus) {
                     setIsBooked(true);
                 } else {
                     setIsBooked(false);
