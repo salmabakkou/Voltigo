@@ -2,6 +2,7 @@
 
 import { useState, useRef } from "react";
 import { createReservation, updateCar } from "../services/api";
+import { uploadToCloudinary } from "../services/cloudinary";
 import { 
     Building2, 
     Home, 
@@ -264,10 +265,33 @@ export default function BookingModal({ car, pickupDate, returnDate, onClose }) {
     const prev = () => setStep(s => s - 1);
 
     const [submitting, setSubmitting] = useState(false);
+    const [uploadStatus, setUploadStatus] = useState("");
 
     const handleConfirm = async () => {
         if (!validateStep3()) return;
         setSubmitting(true);
+
+        // ── Upload documents to Cloudinary ──
+        let documents = {};
+        try {
+            const folder = `voltigo/reservations/${car.id}_${Date.now()}`;
+            setUploadStatus("Uploading License (Front)…");
+            const [urlLicF, urlLicB, urlId] = await Promise.all([
+                fileLicF ? uploadToCloudinary(fileLicF, folder) : Promise.resolve(null),
+                fileLicB ? uploadToCloudinary(fileLicB, folder) : Promise.resolve(null),
+                fileId   ? uploadToCloudinary(fileId,   folder) : Promise.resolve(null),
+            ]);
+            documents = {
+                licenseFront: urlLicF,
+                licenseBack:  urlLicB,
+                idDocument:   urlId,
+            };
+            setUploadStatus("Saving reservation…");
+        } catch (uploadErr) {
+            console.error("Cloudinary upload failed:", uploadErr);
+            // Continue even if upload fails — store null URLs
+            setUploadStatus("Upload failed, saving without documents…");
+        }
         
         const reservationData = {
             id: Date.now().toString(),
@@ -296,6 +320,7 @@ export default function BookingModal({ car, pickupDate, returnDate, onClose }) {
                 country,
                 idNo,
             },
+            documents,
             payMode,
             depositMode,
             status: "confirmed",
@@ -305,7 +330,7 @@ export default function BookingModal({ car, pickupDate, returnDate, onClose }) {
         try {
             await createReservation(reservationData);
         } catch (err) {
-            console.warn("MockAPI POST /reservations failed or endpoint does not exist yet. Saving locally to localStorage...", err);
+            console.warn("MockAPI POST /reservations failed. Saving locally to localStorage...", err);
             const existing = JSON.parse(localStorage.getItem("voltigo_reservations") || "[]");
             existing.push(reservationData);
             localStorage.setItem("voltigo_reservations", JSON.stringify(existing));
@@ -323,6 +348,7 @@ export default function BookingModal({ car, pickupDate, returnDate, onClose }) {
             }
         } finally {
             setSubmitting(false);
+            setUploadStatus("");
             setSubmitted(true);
         }
     };
@@ -677,9 +703,17 @@ export default function BookingModal({ car, pickupDate, returnDate, onClose }) {
                                 Continue <ChevronRight className="w-4 h-4 stroke-[3]" />
                             </button>
                         ) : (
-                            <button onClick={handleConfirm} disabled={submitting} className="px-8 py-3 bg-[#CFFF1A] text-black font-bold text-sm rounded-xl hover:bg-[#b8e617] disabled:opacity-50 disabled:cursor-not-allowed shadow-[0_0_25px_rgba(207,255,26,0.4)] transition-all flex items-center gap-2">
-                                <CheckCircle2 className="w-4 h-4 stroke-[3]" /> {submitting ? "Saving..." : "Confirm Booking"}
-                            </button>
+                            <div className="flex flex-col items-end gap-1.5">
+                                {submitting && uploadStatus && (
+                                    <span className="text-[10px] text-[#CFFF1A]/80 uppercase tracking-wider font-semibold animate-pulse">
+                                        {uploadStatus}
+                                    </span>
+                                )}
+                                <button onClick={handleConfirm} disabled={submitting} className="px-8 py-3 bg-[#CFFF1A] text-black font-bold text-sm rounded-xl hover:bg-[#b8e617] disabled:opacity-50 disabled:cursor-not-allowed shadow-[0_0_25px_rgba(207,255,26,0.4)] transition-all flex items-center gap-2">
+                                    <CheckCircle2 className="w-4 h-4 stroke-[3]" />
+                                    {submitting ? "Processing…" : "Confirm Booking"}
+                                </button>
+                            </div>
                         )}
                     </div>
                 )}
